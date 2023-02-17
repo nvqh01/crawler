@@ -6,10 +6,16 @@ let count = 0;
 readXlsxFile("ranking_domains.xlsx").then((rows) => {
   rows.shift();
   for (const row of rows) {
-    fs.appendFileSync("news_domain.txt", `'${row[1]}',\n`, {
-      encoding: "utf-8",
-    });
     console.log(++count);
+    if (count <= 80000) {
+      fs.appendFileSync("news_domain_1.txt", `'${row[1]}',\n`, {
+        encoding: "utf-8",
+      });
+    } else {
+      fs.appendFileSync("news_domain_2.txt", `'${row[1]}',\n`, {
+        encoding: "utf-8",
+      });
+    }
   }
   console.log("Finish...");
 });

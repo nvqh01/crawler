@@ -177,7 +177,7 @@ class Crawler {
 
       if (proxyUrls.length < this.proxies.length) {
         maxPoolSize = proxyUrls.length * 1;
-        maxUsageCount = 25;
+        maxUsageCount = 5;
       } else {
         maxPoolSize = 1000;
         maxUsageCount = 50;
