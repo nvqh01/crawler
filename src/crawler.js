@@ -130,11 +130,14 @@ class Crawler {
       this.proxies = [];
       return;
     }
+
     this.proxies = proxies.map((proxy) => {
       const protocol = "http";
       const [hostname, port, username, password] = proxy.split(":");
       return `${protocol}://${username}:${password}@${hostname}:${port}`;
     });
+
+    this.shuffleProxies();
   }
 
   getProxies() {
@@ -282,6 +285,10 @@ class Crawler {
       } second(s).`
     );
     setTimeout(() => this.start(), TIME_TO_WAIT_FOR_RESTARTING_CRAWLER);
+  }
+
+  shuffleProxies() {
+    this.proxies.sort(() => Math.random() - 0.5);
   }
 
   start(handlers, requests = []) {
