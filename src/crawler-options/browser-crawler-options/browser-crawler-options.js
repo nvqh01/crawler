@@ -49,7 +49,7 @@ class BrowserCrawlerOptions extends BasicCrawlerOptions {
     const options = {
       ...super.getOptions(handlers),
       browserPoolOptions: {
-        retireBrowserAfterPageCount: 30,
+        retireBrowserAfterPageCount: 100,
         useFingerprints: true,
         fingerprintOptions: {
           fingerprintGeneratorOptions: {

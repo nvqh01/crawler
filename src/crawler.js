@@ -63,20 +63,21 @@ class Crawler {
     this.options = crawlerOptions;
     this.log = new Log({ prefix: "Crawler Service" });
     this.numberOfChangingProxies = 0;
+    this.requestsInProcess = [];
     setInterval(
       () => this.maybeChangeProxies(),
       TIME_TO_WAIT_FOR_CHANGING_PROXIES
     );
     process.stdin.resume();
     process.on("SIGINT", () => {
-      this.release(true).then(() => {
+      this.release().then(() => {
         this.log.info("Stop crawler successfully.");
         return process.exit(0);
       });
     });
   }
 
-  addRequest(requests) {
+  addRequests(requests) {
     if (!this.isRequestQueueInitialized())
       return setTimeout(() => this.addRequest(requests), 2_000);
     this.requestQueue.addRequests(this.convertRequests(requests)).then();
@@ -165,6 +166,10 @@ class Crawler {
     }
 
     !this?.requestQueue && (this.requestQueue = await RequestQueue.open());
+    this.requestsInProcess.length &&
+      this.addRequests(
+        this.requestsInProcess.splice(0, this.requestsInProcess.length)
+      );
     const options = {
       ...this.crawlerOptions.getOptions(handlers),
       requestQueue: this.requestQueue,
@@ -174,14 +179,23 @@ class Crawler {
     if (proxyUrls.length) {
       let maxPoolSize;
       let maxUsageCount;
+      let retireBrowserAfterPageCount;
 
       if (proxyUrls.length < this.proxies.length) {
         maxPoolSize = proxyUrls.length * 1;
         maxUsageCount = 5;
+        retireBrowserAfterPageCount = maxUsageCount * 4;
       } else {
         maxPoolSize = 1000;
         maxUsageCount = 50;
+        retireBrowserAfterPageCount = 100;
       }
+
+      options?.browserPoolOptions &&
+        (options.browserPoolOptions = {
+          ...options.browserPoolOptions,
+          retireBrowserAfterPageCount,
+        });
 
       options.persistCookiesPerSession = true;
       options.proxyConfiguration = new ProxyConfiguration({ proxyUrls });
@@ -224,7 +238,7 @@ class Crawler {
   maybeChangeProxies() {
     if (!this.proxies.length) return;
 
-    if (!this?.crawler) return;
+    if (!this?.crawler || this?.requestQueue) return;
 
     const numberOfHandledRequests =
       this.crawler.requestQueue.assumedHandledCount;
@@ -244,16 +258,22 @@ class Crawler {
       this.restart("Maybe change proxies for crawler.");
   }
 
-  async release(stopCrawler = false) {
+  async release() {
     this?.crawler && (await this.crawler.teardown());
-    stopCrawler &&
-      this?.requestQueue &&
-      (await this.requestQueue.drop().catch());
+    if (this.requestQueue.inProgress.size) {
+      for (const id of this.requestQueue.inProgress) {
+        const request = await this.requestQueue.getRequest(id);
+        this.requestsInProcess.push(request);
+      }
+    }
+    this?.requestQueue && (await this.requestQueue.drop().catch());
     this.crawler = undefined;
+    this.requestQueue = undefined;
     this._isWaitingToRestart = false;
   }
 
   restart(message = "Unknown") {
+    if (this._isWaitingToRestart) return; // Just restart crawler once times
     this._isWaitingToRestart = true;
     this.log.error("Crawler is restarted because of: " + message);
     this.log.info(
