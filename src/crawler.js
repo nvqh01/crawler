@@ -79,7 +79,7 @@ class Crawler {
 
   addRequests(requests) {
     if (!this.isRequestQueueInitialized())
-      return setTimeout(() => this.addRequest(requests), 2_000);
+      return setTimeout(() => this.addRequests(requests), 2_000);
     this.requestQueue.addRequests(this.convertRequests(requests)).then();
   }
 
@@ -187,7 +187,8 @@ class Crawler {
       if (proxyUrls.length < this.proxies.length) {
         maxPoolSize = proxyUrls.length * 1;
         maxUsageCount = 5;
-        retireBrowserAfterPageCount = maxUsageCount * 4;
+        retireBrowserAfterPageCount =
+          maxUsageCount * 4 < 100 ? maxUsageCount * 4 : 100;
       } else {
         maxPoolSize = 1000;
         maxUsageCount = 50;

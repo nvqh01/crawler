@@ -5,7 +5,7 @@ const {
   createJSDOMRouter,
   createPlaywrightRouter,
   createPuppeteerRouter,
-} = require('crawlee');
+} = require("crawlee");
 
 const CRAWLER_ROUTER = new Map([
   [1, createBasicRouter],
@@ -23,13 +23,16 @@ class BasicCrawlerOptions {
   }
 
   getOptions({ errorHandler, failedRequestHandler, requestHandler }) {
-    if (!requestHandler) throw new Error('There is no "requestHandler" in crawler options.');
+    if (!requestHandler)
+      throw new Error('There is no "requestHandler" in crawler options.');
 
-    if (errorHandler && typeof errorHandler !== 'function')
+    if (errorHandler && typeof errorHandler !== "function")
       throw new Error('"errorHandler" must be a function in crawler options.');
 
-    if (failedRequestHandler && typeof failedRequestHandler !== 'function')
-      throw new Error('"failedRequestHandler" must be a function in crawler options.');
+    if (failedRequestHandler && typeof failedRequestHandler !== "function")
+      throw new Error(
+        '"failedRequestHandler" must be a function in crawler options.'
+      );
 
     const options = {
       autoscaledPoolOptions: { ...(this.options?.autoscaledPoolOptions || {}) },
@@ -54,13 +57,16 @@ class BasicCrawlerOptions {
 
     errorHandler && (options.errorHandler = errorHandler);
 
-    failedRequestHandler && (options.failedRequestHandler = failedRequestHandler);
+    failedRequestHandler &&
+      (options.failedRequestHandler = failedRequestHandler);
 
     const router = CRAWLER_ROUTER.get(this.typeOfCrawler)();
 
-    const _requestHandler = Array.isArray(requestHandler) ? requestHandler : [requestHandler];
+    const _requestHandler = Array.isArray(requestHandler)
+      ? requestHandler
+      : [requestHandler];
     _requestHandler.forEach((handler) => {
-      if (typeof handler === 'function') router.addDefaultHandler(handler);
+      if (typeof handler === "function") router.addDefaultHandler(handler);
       else router.addHandler(handler.label, handler.handler);
     });
     options.requestHandler = router;
