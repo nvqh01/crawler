@@ -16,6 +16,7 @@ module.exports = {
       maxRequestsPerCrawl: 0,
       maxRequestsPerMinute: 70,
       minConcurrency: 1,
+      navigationTimeoutSecs: 60,
       requestHandlerTimeoutSecs: 60,
     },
     httpCrawler: {},
