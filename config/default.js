@@ -35,7 +35,7 @@ module.exports = {
     puppeteerCrawler: {
       headless: false,
       keepAlive: true,
-      maxConcurrency: 2,
+      maxConcurrency: 1,
       maxRequestRetries: 0,
       maxRequestsPerCrawl: 0,
       maxRequestsPerMinute: 20,
